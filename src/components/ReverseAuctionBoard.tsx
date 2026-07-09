@@ -11,15 +11,18 @@ import {
   User, 
   Sparkles,
   Plus,
-  X
+  X,
+  Upload,
+  Trash2
 } from "lucide-react";
+import { showSuccess, showError } from "../lib/notifications";
 
 interface ReverseAuctionBoardProps {
   auctions: ReverseAuction[];
   providers: UserProfile[];
   currentUserId: string;
   currentUserProfile: UserProfile;
-  onCreateAuction: (title: string, category: string, desc: string, location: string, maxBudget: number, deadline: string) => void;
+  onCreateAuction: (title: string, category: string, desc: string, location: string, maxBudget: number, deadline: string, attachmentUrl?: string) => void;
   onPlaceBid: (auctionId: string, amount: number, proposal: string) => void;
   onAcceptBid: (auctionId: string, bidId: string, bid: Bid) => void;
 }
@@ -41,19 +44,137 @@ export default function ReverseAuctionBoard({
   const [newBudget, setNewBudget] = useState(5000);
   const [newDeadline, setNewDeadline] = useState("2026-07-15");
 
+  // Submission / validation / upload states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [attachment, setAttachment] = useState<string | null>(null);
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Bid states
   const [biddingAuctionId, setBiddingAuctionId] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState(1000);
   const [bidProposal, setBidProposal] = useState("");
 
-  const handlePostAuction = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const tempErrors: Record<string, string> = {};
+    if (!newTitle.trim()) {
+      tempErrors.title = "Job Title is required";
+    } else if (newTitle.trim().length < 10) {
+      tempErrors.title = "Job Title must be at least 10 characters";
+    }
+
+    if (!newDesc.trim()) {
+      tempErrors.desc = "Detailed Requirements are required";
+    } else if (newDesc.trim().length < 20) {
+      tempErrors.desc = "Requirements must be at least 20 characters";
+    }
+
+    if (!newBudget || Number(newBudget) <= 500) {
+      tempErrors.budget = "Max Budget Cap must be greater than 500 PKR";
+    }
+
+    if (!newDeadline) {
+      tempErrors.deadline = "Deadline Date is required";
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selDate = new Date(newDeadline);
+      if (selDate < today) {
+        tempErrors.deadline = "Deadline cannot be in the past";
+      }
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
+  const handlePostAuction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle || !newDesc) return;
-    onCreateAuction(newTitle, newCategory, newDesc, newLocation, Number(newBudget), newDeadline);
-    setShowCreateModal(false);
-    // Reset states
-    setNewTitle("");
-    setNewDesc("");
+    if (!validateForm()) {
+      showError("Validation Failed", "Please correct the highlighted errors in your request form.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Network lag simulation
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      onCreateAuction(
+        newTitle.trim(),
+        newCategory,
+        newDesc.trim(),
+        newLocation,
+        Number(newBudget),
+        newDeadline,
+        attachment || undefined
+      );
+
+      setShowCreateModal(false);
+      showSuccess(
+        "Request Broadcasted!",
+        `Your request "${newTitle}" is now live on Hyderabad's bidding board for providers in ${newLocation}.`
+      );
+
+      // Reset form states
+      setNewTitle("");
+      setNewDesc("");
+      setNewBudget(5000);
+      setNewDeadline("2026-07-15");
+      setAttachment(null);
+      setAttachmentName(null);
+      setErrors({});
+    } catch (err) {
+      showError("System Error", "Failed to broadcast custom service request.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, file: "File size exceeds 2MB limit" }));
+      showError("File Too Large", "Please upload an image smaller than 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachment(reader.result as string);
+      setAttachmentName(file.name);
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.file;
+        return copy;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const handlePostBid = (e: React.FormEvent) => {
@@ -141,6 +262,16 @@ export default function ReverseAuctionBoard({
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                           {auc.description}
                         </p>
+                        {auc.attachmentUrl && (
+                          <div className="mt-3">
+                            <img 
+                              src={auc.attachmentUrl} 
+                              alt="Attachment / Reference Photo" 
+                              className="max-h-40 rounded-xl object-cover border border-slate-200 dark:border-slate-800"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-right shrink-0">
@@ -315,9 +446,9 @@ export default function ReverseAuctionBoard({
 
       {/* Modal - Create Auction */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative">
-            <button onClick={() => setShowCreateModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in overflow-y-auto">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative my-8">
+            <button onClick={() => { if (!isSubmitting) setShowCreateModal(false); }} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 disabled:opacity-50" disabled={isSubmitting}>
               <X className="w-4 h-4" />
             </button>
 
@@ -335,10 +466,21 @@ export default function ReverseAuctionBoard({
                   type="text"
                   required
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
+                  onChange={(e) => {
+                    setNewTitle(e.target.value);
+                    if (errors.title) setErrors(prev => { const c = { ...prev }; delete c.title; return c; });
+                  }}
+                  disabled={isSubmitting}
                   placeholder="e.g., Complete internal home whitewashing (5 rooms)"
-                  className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none"
+                  className={`w-full text-xs bg-slate-50 dark:bg-slate-900 border rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none transition-colors ${
+                    errors.title ? "border-red-500 focus:border-red-600" : "border-slate-200 dark:border-slate-800"
+                  }`}
                 />
+                {errors.title && (
+                  <p className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {errors.title}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -347,6 +489,7 @@ export default function ReverseAuctionBoard({
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
+                    disabled={isSubmitting}
                     className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none"
                   >
                     <option value="Home Services">Home Services</option>
@@ -361,6 +504,7 @@ export default function ReverseAuctionBoard({
                   <select
                     value={newLocation}
                     onChange={(e) => setNewLocation(e.target.value)}
+                    disabled={isSubmitting}
                     className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none"
                   >
                     <option value="Qasimabad">Qasimabad</option>
@@ -380,9 +524,20 @@ export default function ReverseAuctionBoard({
                     type="number"
                     required
                     value={newBudget}
-                    onChange={(e) => setNewBudget(Number(e.target.value))}
-                    className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white font-mono focus:outline-none"
+                    onChange={(e) => {
+                      setNewBudget(Number(e.target.value));
+                      if (errors.budget) setErrors(prev => { const c = { ...prev }; delete c.budget; return c; });
+                    }}
+                    disabled={isSubmitting}
+                    className={`w-full text-xs bg-slate-50 dark:bg-slate-900 border rounded-xl p-3 text-slate-800 dark:text-white font-mono focus:outline-none transition-colors ${
+                      errors.budget ? "border-red-500 focus:border-red-600" : "border-slate-200 dark:border-slate-800"
+                    }`}
                   />
+                  {errors.budget && (
+                    <p className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors.budget}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Deadline Date</label>
@@ -390,9 +545,20 @@ export default function ReverseAuctionBoard({
                     type="date"
                     required
                     value={newDeadline}
-                    onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none"
+                    onChange={(e) => {
+                      setNewDeadline(e.target.value);
+                      if (errors.deadline) setErrors(prev => { const c = { ...prev }; delete c.deadline; return c; });
+                    }}
+                    disabled={isSubmitting}
+                    className={`w-full text-xs bg-slate-50 dark:bg-slate-900 border rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none transition-colors ${
+                      errors.deadline ? "border-red-500 focus:border-red-600" : "border-slate-200 dark:border-slate-800"
+                    }`}
                   />
+                  {errors.deadline && (
+                    <p className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors.deadline}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -401,18 +567,110 @@ export default function ReverseAuctionBoard({
                 <textarea
                   required
                   value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
+                  onChange={(e) => {
+                    setNewDesc(e.target.value);
+                    if (errors.desc) setErrors(prev => { const c = { ...prev }; delete c.desc; return c; });
+                  }}
+                  disabled={isSubmitting}
                   placeholder="Describe your issue, required materials, size of rooms, working hours allowed, and tools needed..."
                   rows={3}
-                  className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none"
+                  className={`w-full text-xs bg-slate-50 dark:bg-slate-900 border rounded-xl p-3 text-slate-800 dark:text-white focus:outline-none transition-colors ${
+                    errors.desc ? "border-red-500 focus:border-red-600" : "border-slate-200 dark:border-slate-800"
+                  }`}
                 />
+                {errors.desc && (
+                  <p className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {errors.desc}
+                  </p>
+                )}
+              </div>
+
+              {/* Enhanced Drag and Drop File/Image Upload Section */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Reference Photo / Attachment (Max 2MB)
+                </label>
+                
+                {!attachment ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                      isDragging 
+                        ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/20" 
+                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/30 dark:bg-slate-900/10"
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="file-upload-input"
+                      onChange={handleFileChange}
+                      disabled={isSubmitting}
+                      className="hidden"
+                    />
+                    <label htmlFor="file-upload-input" className="cursor-pointer w-full h-full block">
+                      <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1 animate-bounce" />
+                      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                        Drag and drop or <span className="text-blue-600 hover:underline">browse files</span>
+                      </p>
+                      <p className="text-[9px] text-slate-400 mt-0.5">Supports PNG, JPG, JPEG up to 2MB</p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {attachment.startsWith("data:image/") ? (
+                        <img 
+                          src={attachment} 
+                          alt="Uploaded attachment preview" 
+                          className="w-10 h-10 object-cover rounded-lg border border-slate-200 dark:border-slate-850 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-slate-100 dark:bg-slate-850 text-slate-400 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
+                          FILE
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate leading-none">
+                          {attachmentName || "Attached Image"}
+                        </p>
+                        <p className="text-[9px] text-emerald-500 mt-1 font-semibold">Ready to upload</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => { setAttachment(null); setAttachmentName(null); }}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                {errors.file && (
+                  <p className="text-[10px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {errors.file}
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold tracking-wider transition-all"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-400 disabled:opacity-60 text-white rounded-xl text-xs font-bold tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
-                BROADCAST TO PROVIDERS
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>BROADCASTING TO SINDH PARTNERS...</span>
+                  </>
+                ) : (
+                  <span>BROADCAST TO PROVIDERS</span>
+                )}
               </button>
             </form>
           </div>

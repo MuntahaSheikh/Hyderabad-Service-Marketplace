@@ -93,6 +93,7 @@ export interface ReverseAuction {
   bids: Bid[];
   status: "open" | "accepted" | "expired";
   createdAt: string;
+  attachmentUrl?: string;
 }
 
 export interface Bid {

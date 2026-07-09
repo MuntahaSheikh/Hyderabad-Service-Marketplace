@@ -330,7 +330,7 @@ export default function App() {
   // REVERSE AUCTION ACTIONS
   // ==========================================
 
-  const handleCreateAuction = async (title: string, category: string, desc: string, location: string, maxBudget: number, deadline: string) => {
+  const handleCreateAuction = async (title: string, category: string, desc: string, location: string, maxBudget: number, deadline: string, attachmentUrl?: string) => {
     const newAuc: ReverseAuction = {
       id: "auc-" + Math.floor(Math.random() * 90000 + 10000),
       customerId: "cust-kamran",
@@ -343,7 +343,8 @@ export default function App() {
       deadline,
       bids: [],
       status: "open",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      attachmentUrl
     };
 
     const saved = await createReverseAuction(newAuc);
