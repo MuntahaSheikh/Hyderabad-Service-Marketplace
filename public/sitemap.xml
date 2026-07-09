@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Core Pages -->
   <url>
-    <loc>https://hyderabad-service-marketplace.com/</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/auction</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/auction</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>always</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/dashboard</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/dashboard</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
@@ -22,31 +22,31 @@
 
   <!-- Categories -->
   <url>
-    <loc>https://hyderabad-service-marketplace.com/categories/wedding-halls</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/categories/wedding-halls</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/categories/catering</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/categories/catering</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/categories/media</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/categories/media</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/categories/beauty</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/categories/beauty</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/categories/planners</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/categories/planners</loc>
     <lastmod>2026-07-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.70</priority>
@@ -54,13 +54,13 @@
 
   <!-- Blog Posts -->
   <url>
-    <loc>https://hyderabad-service-marketplace.com/blog/choosing-perfect-wedding-hall-hyderabad</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/blog/choosing-perfect-wedding-hall-hyderabad</loc>
     <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
   <url>
-    <loc>https://hyderabad-service-marketplace.com/blog/sindhi-arabic-mehndi-designs</loc>
+    <loc>https://hyderabad-service-marketplace.vercel.app/blog/sindhi-arabic-mehndi-designs</loc>
     <lastmod>2026-06-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>

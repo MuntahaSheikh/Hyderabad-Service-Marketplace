@@ -12,7 +12,7 @@ export interface SeoMetadata {
   schemas: Record<string, any>[];
 }
 
-const BASE_URL = "https://hyderabad-service-marketplace.com";
+const BASE_URL = "https://hyderabad-service-marketplace.vercel.app";
 
 export function generateSeoMetadata(
   currentView: string,

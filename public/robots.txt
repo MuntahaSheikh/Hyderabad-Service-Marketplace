@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://hyderabad-service-marketplace.com/sitemap.xml
+Sitemap: https://hyderabad-service-marketplace.vercel.app/sitemap.xml
