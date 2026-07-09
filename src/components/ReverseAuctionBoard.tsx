@@ -197,9 +197,10 @@ export default function ReverseAuctionBoard({
                               <div className="flex gap-3">
                                 <img
                                   src={bid.providerAvatar}
-                                  alt={bid.providerName}
+                                  alt={`Bidder Avatar ${bid.providerName}`}
                                   className="w-8 h-8 rounded-full border border-white dark:border-slate-800 object-cover shrink-0"
                                   referrerPolicy="no-referrer"
+                                  loading="lazy"
                                 />
                                 <div>
                                   <div className="flex items-center gap-1.5">
@@ -295,7 +296,7 @@ export default function ReverseAuctionBoard({
                 <div key={prov.uid} className="flex items-center justify-between bg-white/10 rounded-xl p-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-cyan-300">#{idx + 1}</span>
-                    <img src={prov.avatar} alt={prov.name} className="w-7 h-7 rounded-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={prov.avatar} alt={`Local Provider ${prov.name}`} className="w-7 h-7 rounded-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
                     <div>
                       <p className="text-xs font-bold leading-none">{prov.name.split(" ")[0]}</p>
                       <span className="text-[9px] text-blue-100">{prov.category}</span>

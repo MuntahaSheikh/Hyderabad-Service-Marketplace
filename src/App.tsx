@@ -32,6 +32,15 @@ import DashboardCustomer from "./components/DashboardCustomer";
 import DashboardProvider from "./components/DashboardProvider";
 import DashboardAdmin from "./components/DashboardAdmin";
 import AiAssistant from "./components/AiAssistant";
+import { generateSeoMetadata, updateDocumentSeo } from "./lib/seo";
+import { 
+  showSuccess, 
+  showError, 
+  showWarning, 
+  showInfo, 
+  showConfirm, 
+  showToast 
+} from "./lib/notifications";
 import { 
   Bot, 
   Sparkles, 
@@ -221,6 +230,12 @@ export default function App() {
     document.documentElement.classList.remove("dark");
   }, []);
 
+  // SEO Meta & Structured Data Synchronization Effect
+  useEffect(() => {
+    const meta = generateSeoMetadata(currentView, selectedCategory, selectedLocation, searchQuery);
+    updateDocumentSeo(meta);
+  }, [currentView, selectedCategory, selectedLocation, searchQuery]);
+
   // ==========================================
   // CORE DISPATCH & BOOKING WORKFLOW HANDLERS
   // ==========================================
@@ -257,7 +272,7 @@ export default function App() {
     const saved = await createBooking(newBook);
     setBookings(prev => [saved, ...prev]);
     setCurrentView("dashboard");
-    alert(`Booking Dispatch successfully requested from ${provider.name}! Switch to 'My Workspace' to see active timeline.`);
+    showSuccess("Booking Requested", `Your booking with ${provider.name} has been successfully requested. Switch to 'My Workspace' to see active timeline.`);
   };
 
   const handleTriggerSosDispatch = async (serviceName: string) => {
@@ -294,7 +309,7 @@ export default function App() {
     const saved = await createBooking(newBook);
     setBookings(prev => [saved, ...prev]);
     setCurrentView("dashboard");
-    alert(`🚨 SOS EMERGENCY DISPATCH TRIGGERED! ${chosenProvider.name} is on their way with a calculated arrival time of 20 minutes.`);
+    showSuccess("🚨 SOS Dispatch Triggered!", `${chosenProvider.name} is on their way with a calculated arrival time of 20 minutes.`);
   };
 
   const handleUpdateBookingStatusInApp = async (bookingId: string, newStatus: Booking["status"], description: string) => {
@@ -307,7 +322,7 @@ export default function App() {
     if (b) {
       const updated = await updateBookingStatus(bookingId, "completed", "Job completed successfully. Customer authorized verification OTP code.");
       setBookings(prev => prev.map(bk => bk.id === bookingId ? updated : bk));
-      alert("Booking verified & completed successfully! Your loyalty points have been updated.");
+      showSuccess("Booking Completed", "Booking verified & completed successfully! Your loyalty points have been updated.");
     }
   };
 
@@ -379,7 +394,7 @@ export default function App() {
     const saved = await createBooking(newBook);
     setBookings(prev => [saved, ...prev]);
     setCurrentView("dashboard");
-    alert(`Bidding Proposal Accepted! Contract successfully awarded to ${bid.providerName} for PKR ${bid.amount.toLocaleString()}.`);
+    showSuccess("Bidding Proposal Accepted!", `Contract successfully awarded to ${bid.providerName} for PKR ${bid.amount.toLocaleString()}.`);
   };
 
   // ==========================================
@@ -400,7 +415,7 @@ export default function App() {
 
     const saved = await addReview(newRev);
     setReviews(prev => [saved, ...prev]);
-    alert("Review submitted successfully! Thank you for supporting honest service providers in Hyderabad.");
+    showSuccess("Review Submitted", "Review submitted successfully! Thank you for supporting honest service providers in Hyderabad.");
   };
 
   const handleSubmitComplaint = async (bookingId: string, providerId: string, providerName: string, text: string) => {
@@ -445,7 +460,7 @@ export default function App() {
       kycStatus: status 
     });
     setProviders(prev => prev.map(p => p.uid === uid ? updated : p));
-    alert(`Provider credentials successfully ${status}!`);
+    showSuccess("Credentials Verified", `Provider credentials successfully ${status}!`);
   };
 
   const handleResolveComplaint = async (id: string) => {
@@ -557,9 +572,24 @@ export default function App() {
 
       <Navbar
         currentRole={currentRole}
-        onChangeRole={setCurrentRole}
+        onChangeRole={(role) => {
+          setCurrentRole(role);
+          const roleLabels: Record<string, string> = {
+            customer: "Customer (Kamran Shah)",
+            vendor: "Maria Bridal Studio",
+            hall_owner: "Shalimar Banquet",
+            event_planner: "Apex Elite Planners",
+            admin: "Hyderabad Admin Desk",
+            super_admin: "Super Admin Control Desk",
+            provider: "Service Provider"
+          };
+          showToast(`Workspace role: ${roleLabels[role] || role}`, "success");
+        }}
         selectedLocation={selectedLocation}
-        onLocationChange={setSelectedLocation}
+        onLocationChange={(loc) => {
+          setSelectedLocation(loc);
+          showToast(`Location filtered: ${loc}`, "info");
+        }}
         onNavigate={setCurrentView}
         currentView={currentView}
       />
@@ -667,9 +697,10 @@ export default function App() {
                             >
                               <img 
                                 src={prov.avatar} 
-                                alt={prov.name} 
+                                alt={`Verified Provider ${prov.name} - ${prov.category}`} 
                                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shrink-0 border border-slate-200/60 dark:border-slate-800/60" 
                                 referrerPolicy="no-referrer"
+                                loading="lazy"
                               />
 
                               <div className="flex-1 space-y-2">
@@ -862,6 +893,28 @@ export default function App() {
                   onResolveComplaint={handleResolveComplaint}
                 />
               )}
+            </div>
+          )}
+
+          {!["home", "auction", "dashboard"].includes(currentView) && (
+            <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6 animate-fade-in">
+              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto text-2xl font-extrabold shadow-sm">
+                404
+              </div>
+              <h2 className="text-xl font-display font-extrabold text-slate-800 tracking-tight">
+                Route or Resource Not Found
+              </h2>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                The service page, provider listing, or custom bidding request you are looking for does not exist or has expired (HTTP 410 Gone).
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={() => setCurrentView("home")}
+                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  Return to Marketplace Home
+                </button>
+              </div>
             </div>
           )}
         </main>

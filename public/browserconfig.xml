@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square150x150logo src="/src/assets/images/hsm_favicon_logo_1783583318477.jpg"/>
+      <TileColor>#1e3a8a</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>

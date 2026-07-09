@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core Pages -->
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/auction</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>always</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/dashboard</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Categories -->
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/categories/wedding-halls</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/categories/catering</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/categories/media</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/categories/beauty</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/categories/planners</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Blog Posts -->
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/blog/choosing-perfect-wedding-hall-hyderabad</loc>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+  <url>
+    <loc>https://hyderabad-service-marketplace.com/blog/sindhi-arabic-mehndi-designs</loc>
+    <lastmod>2026-06-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+</urlset>

@@ -15,6 +15,12 @@ import {
   Info,
   X
 } from "lucide-react";
+import { 
+  showConfirm, 
+  showSuccess, 
+  showError, 
+  showToast 
+} from "../lib/notifications";
 
 interface DashboardAdminProps {
   bookings: Booking[];
@@ -32,6 +38,32 @@ export default function DashboardAdmin({
   onResolveComplaint
 }: DashboardAdminProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "providers" | "complaints" | "logs">("overview");
+
+  const handleVerifyProviderClick = async (uid: string, providerName: string, status: "approved" | "rejected") => {
+    const isApproved = status === "approved";
+    const confirm = await showConfirm(
+      isApproved ? "Approve Service Provider?" : "Reject Service Provider?",
+      `Are you sure you want to mark ${providerName}'s application credentials as ${status}?`,
+      isApproved ? "Yes, Approve Partner" : "Yes, Reject Partner",
+      "Cancel"
+    );
+    if (confirm) {
+      onVerifyProvider(uid, status);
+    }
+  };
+
+  const handleResolveComplaintClick = async (complaint: Complaint) => {
+    const confirm = await showConfirm(
+      "Resolve Dispute/Complaint?",
+      `Are you sure you want to mark this dispute from ${complaint.customerName} against ${complaint.providerName} as RESOLVED? This indicates the dispute is fully mediated.`,
+      "Yes, Resolve Dispute",
+      "No, Keep Open"
+    );
+    if (confirm) {
+      onResolveComplaint(complaint.id);
+      showToast("Dispute marked as resolved", "success");
+    }
+  };
 
   // Calculate stats
   const totalBookings = bookings.length;
@@ -235,13 +267,13 @@ export default function DashboardAdmin({
 
                   <div className="flex gap-2 self-end md:self-auto shrink-0">
                     <button
-                      onClick={() => onVerifyProvider(p.uid, "rejected")}
+                      onClick={() => handleVerifyProviderClick(p.uid, p.name, "rejected")}
                       className="px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg font-bold"
                     >
                       Reject
                     </button>
                     <button
-                      onClick={() => onVerifyProvider(p.uid, "approved")}
+                      onClick={() => handleVerifyProviderClick(p.uid, p.name, "approved")}
                       className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center gap-1 shadow-sm"
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
@@ -302,7 +334,7 @@ export default function DashboardAdmin({
 
                     {c.status !== "resolved" && (
                       <button
-                        onClick={() => onResolveComplaint(c.id)}
+                        onClick={() => handleResolveComplaintClick(c)}
                         className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-sm shrink-0"
                       >
                         Resolve Dispute

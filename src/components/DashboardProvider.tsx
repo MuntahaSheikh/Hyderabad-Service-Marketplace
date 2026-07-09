@@ -26,6 +26,13 @@ import {
   ShieldCheck,
   Check
 } from "lucide-react";
+import { 
+  showConfirm, 
+  showSuccess, 
+  showError, 
+  showToast, 
+  promptOtpInput 
+} from "../lib/notifications";
 
 interface DashboardProviderProps {
   bookings: Booking[];
@@ -150,6 +157,10 @@ export default function DashboardProvider({
 
   const triggerNotification = (msg: string) => {
     setUiNotification(msg);
+    // Clean up msg prefix for SweetAlert2 toast
+    const cleanMsg = msg.replace(/^✓\s*/, "").replace(/^🚨\s*/, "");
+    const isError = msg.toLowerCase().includes("could not") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("incorrect");
+    showToast(cleanMsg, isError ? "error" : "success");
     setTimeout(() => {
       setUiNotification(null);
     }, 4500);
@@ -160,6 +171,45 @@ export default function DashboardProvider({
     if (!chatText.trim() || !showChatId) return;
     onSendMessage(showChatId, chatText);
     setChatText("");
+  };
+
+  const handleAcceptJob = async (job: Booking) => {
+    const confirm = await showConfirm(
+      "Accept Booking Request?",
+      `Are you sure you want to accept this booking request from ${job.customerName} for ${job.service}?`,
+      "Yes, Accept",
+      "No, Go Back"
+    );
+    if (confirm) {
+      onUpdateBookingStatus(job.id, "accepted", "Booking accepted. Custom setup initiating.");
+      triggerNotification("✓ Booking accepted successfully!");
+    }
+  };
+
+  const handleDeclineJob = async (job: Booking) => {
+    const confirm = await showConfirm(
+      "Decline Booking Request?",
+      `Are you sure you want to decline this booking request from ${job.customerName}?`,
+      "Yes, Decline",
+      "No, Go Back"
+    );
+    if (confirm) {
+      onUpdateBookingStatus(job.id, "cancelled", "Provider declined the dispatch request");
+      triggerNotification("✓ Booking request declined.");
+    }
+  };
+
+  const handleStartJob = async (job: Booking) => {
+    const confirm = await showConfirm(
+      "Start Job?",
+      `Are you ready to mark your arrival and start work for ${job.customerName}?`,
+      "Yes, Start",
+      "No, Wait"
+    );
+    if (confirm) {
+      onUpdateBookingStatus(job.id, "in_progress", "Provider has arrived on customer site and started setups");
+      triggerNotification("✓ Job marked as in progress.");
+    }
   };
 
   const activeChatCustomer = myBookings.find(b => b.customerId === showChatId);
@@ -241,9 +291,12 @@ export default function DashboardProvider({
         setOtpVerifyBookingId(null);
         setEnteredOtp("");
         setOtpError("");
-        triggerNotification("✓ Booking finalized! PKR " + b.price.toLocaleString() + " added to wallet balance.");
+        showSuccess("Booking Finalized!", `✓ Booking finalized! PKR ${b.price.toLocaleString()} added to wallet balance.`);
+        triggerNotification("✓ Booking finalized successfully!");
       } else {
-        setOtpError("Incorrect 4-digit code. Please verify the code displayed on the customer's portal screen.");
+        const errorMsg = "Incorrect 4-digit code. Please verify the code displayed on the customer's portal screen.";
+        setOtpError(errorMsg);
+        showError("Verification Failed", errorMsg);
       }
     }
   };
@@ -251,10 +304,14 @@ export default function DashboardProvider({
   const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (Number(withdrawAmount) > totalEarnings) {
-      setWithdrawMsg("Insufficient earnings balance for transfer.");
+      const errorMsg = "Insufficient earnings balance for transfer.";
+      setWithdrawMsg(errorMsg);
+      showError("Withdrawal Failed", errorMsg);
       return;
     }
-    setWithdrawMsg(`Withdrawal initiated! PKR ${Number(withdrawAmount).toLocaleString()} is being routed instantly to your ${withdrawMethod} wallet account ${withdrawAccount}. Available in 15 mins.`);
+    const successMsg = `Withdrawal initiated! PKR ${Number(withdrawAmount).toLocaleString()} is being routed instantly to your ${withdrawMethod} wallet account ${withdrawAccount}. Available in 15 mins.`;
+    setWithdrawMsg(successMsg);
+    showSuccess("Withdrawal Initiated!", successMsg);
     setTimeout(() => {
       setShowWithdrawModal(false);
       setWithdrawMsg("");
@@ -528,13 +585,13 @@ export default function DashboardProvider({
                         {job.status === "pending" && (
                           <>
                             <button
-                              onClick={() => onUpdateBookingStatus(job.id, "cancelled", "Provider declined the dispatch request")}
+                              onClick={() => handleDeclineJob(job)}
                               className="px-3 py-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 text-xs font-bold rounded-lg transition-colors"
                             >
                               Decline
                             </button>
                             <button
-                              onClick={() => onUpdateBookingStatus(job.id, "accepted", "Booking accepted. Custom setup initiating.")}
+                              onClick={() => handleAcceptJob(job)}
                               className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-colors"
                             >
                               Accept Booking
@@ -544,7 +601,7 @@ export default function DashboardProvider({
 
                         {job.status === "accepted" && (
                           <button
-                            onClick={() => onUpdateBookingStatus(job.id, "in_progress", "Provider has arrived on customer site and started setups")}
+                            onClick={() => handleStartJob(job)}
                             className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
                           >
                             Mark Active Setup

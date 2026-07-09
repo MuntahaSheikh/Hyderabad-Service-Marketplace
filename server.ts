@@ -237,6 +237,36 @@ Schema:
   }
 });
 
+// SEO and indexing files serving
+const serveSeoFile = (filename: string, contentType: string) => {
+  return (req: any, res: any) => {
+    const publicPath = path.join(process.cwd(), "public", filename);
+    const distPath = path.join(process.cwd(), "dist", filename);
+    const resolvedPath = process.env.NODE_ENV === "production" ? distPath : publicPath;
+    
+    res.setHeader("Content-Type", contentType);
+    res.sendFile(resolvedPath, (err) => {
+      if (err) {
+        // Fallback to public if dist isn't built yet
+        res.sendFile(publicPath, (err2) => {
+          if (err2) {
+            res.status(404).send("File not found");
+          }
+        });
+      }
+    });
+  };
+};
+
+app.get("/robots.txt", serveSeoFile("robots.txt", "text/plain"));
+app.get("/sitemap.xml", serveSeoFile("sitemap.xml", "application/xml"));
+app.get("/manifest.json", serveSeoFile("manifest.json", "application/json"));
+app.get("/site.webmanifest", serveSeoFile("manifest.json", "application/json"));
+app.get("/browserconfig.xml", serveSeoFile("browserconfig.xml", "application/xml"));
+app.get("/rss.xml", serveSeoFile("rss.xml", "application/xml"));
+app.get("/googleYK-pl5Dys6dA2YfxgNDDovzQoEbic5lvK87wTcap9NY.html", serveSeoFile("googleYK-pl5Dys6dA2YfxgNDDovzQoEbic5lvK87wTcap9NY.html", "text/html"));
+app.get("/google4K712HYFEj8dG3NLwRSdwBkpbnUkUnGpngNemboHIj8.html", serveSeoFile("google4K712HYFEj8dG3NLwRSdwBkpbnUkUnGpngNemboHIj8.html", "text/html"));
+
 // Serve Frontend App
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

@@ -18,6 +18,13 @@ import {
   Sparkles,
   RefreshCw
 } from "lucide-react";
+import { 
+  showConfirm, 
+  showSuccess, 
+  showError, 
+  showToast, 
+  promptOtpInput 
+} from "../lib/notifications";
 
 interface DashboardCustomerProps {
   bookings: Booking[];
@@ -77,6 +84,38 @@ export default function DashboardCustomer({
     setChatText("");
   };
 
+  const handleCancelClick = async (bookingId: string) => {
+    const isConfirmed = await showConfirm(
+      "Cancel Booking Request?",
+      "Are you sure you want to cancel this booking request? This action cannot be undone.",
+      "Yes, Cancel",
+      "No, Keep"
+    );
+    if (isConfirmed) {
+      onCancelBooking(bookingId);
+      showToast("Booking request cancelled", "success");
+    }
+  };
+
+  const handleCompleteClick = async (book: Booking) => {
+    const otpInput = await promptOtpInput(
+      "Verify Service Completion",
+      `Please ask the provider for their 4-digit OTP code to verify completion and release loyalty points. (Hint: enter "${book.otpCode}" for demo)`
+    );
+    if (otpInput === null) return;
+    
+    if (otpInput === book.otpCode) {
+      onCompleteWithOtp(book.id);
+    } else {
+      showError("Verification Failed", "The code you entered does not match the completion OTP. Please try again.");
+    }
+  };
+
+  const handleCopyReferral = () => {
+    navigator.clipboard.writeText("HYD-KAMRAN");
+    showToast("Referral code copied!", "success");
+  };
+
   const activeChatProvider = providers.find(p => p.uid === showChatId);
   const filteredChats = chats.filter(
     c => (c.senderId === currentUserId && c.receiverId === showChatId) || 
@@ -127,8 +166,10 @@ export default function DashboardCustomer({
 
           <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50">
             <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
-              <span>Referral: <strong>HYD-KAMRAN</strong></span>
-              <span className="text-blue-600 dark:text-cyan-400 font-bold">Share & Earn 100 Coins</span>
+              <span onClick={handleCopyReferral} className="cursor-pointer hover:text-blue-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1" title="Click to copy code">
+                Referral: <strong className="underline decoration-dotted">HYD-KAMRAN</strong>
+              </span>
+              <span onClick={handleCopyReferral} className="text-blue-600 dark:text-cyan-400 font-bold cursor-pointer hover:underline">Share & Earn 100 Coins</span>
             </div>
           </div>
         </div>
@@ -222,7 +263,7 @@ export default function DashboardCustomer({
                       <div className="flex gap-2">
                         {book.status === "pending" && (
                           <button
-                            onClick={() => onCancelBooking(book.id)}
+                            onClick={() => handleCancelClick(book.id)}
                             className="px-3.5 py-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/10 text-xs font-bold rounded-lg transition-colors"
                           >
                             Cancel Request
@@ -233,7 +274,7 @@ export default function DashboardCustomer({
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-mono text-slate-400">Completion OTP: <strong className="text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded font-bold text-xs">{book.otpCode}</strong></span>
                             <button
-                              onClick={() => onCompleteWithOtp(book.id)}
+                              onClick={() => handleCompleteClick(book)}
                               className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all"
                             >
                               Verify OTP & Complete

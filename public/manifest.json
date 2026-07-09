@@ -1,0 +1,25 @@
+{
+  "name": "Hyderabad Service Marketplace",
+  "short_name": "HSM",
+  "description": "Premium hyperlocal services in Hyderabad, Sindh including reverse-auction bidding, real-time client-provider chats, and AI-powered pricing.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
+  "categories": ["business", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "/src/assets/images/hsm_favicon_logo_1783583318477.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/hsm_favicon_logo_1783583318477.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

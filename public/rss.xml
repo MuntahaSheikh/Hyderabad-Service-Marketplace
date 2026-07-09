@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hyderabad Service Marketplace - Live Listings &amp; News Feed</title>
+    <link>https://hyderabad-service-marketplace.com</link>
+    <description>The latest service request reverse auctions, premium vendor announcements, and expert wedding/service guides in Hyderabad, Sindh.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 09 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://hyderabad-service-marketplace.com/rss.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Choosing the Perfect Wedding Hall in Hyderabad: A 2026 Guide</title>
+      <link>https://hyderabad-service-marketplace.com/blog/choosing-perfect-wedding-hall-hyderabad</link>
+      <description>From capacity limits on Autobahn Road to parking safety in Qasimabad, learn the top 5 questions to ask hall owners before paying your advance booking deposit.</description>
+      <guid>https://hyderabad-service-marketplace.com/blog/choosing-perfect-wedding-hall-hyderabad</guid>
+      <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>10 Must-Have Traditional Sindhi &amp; Arabic Mehndi Designs</title>
+      <link>https://hyderabad-service-marketplace.com/blog/sindhi-arabic-mehndi-designs</link>
+      <description>Aesthetic negative space mandalas are trending this wedding season. Read our complete design curation for brides and bridesmaid henna.</description>
+      <guid>https://hyderabad-service-marketplace.com/blog/sindhi-arabic-mehndi-designs</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Mehran Wedding Hall now open for Winter bookings with 15% discount</title>
+      <link>https://hyderabad-service-marketplace.com/</link>
+      <description>Book the premium Mehran Wedding Hall on Autobahn Road, Hyderabad for standard rates with exclusive catering packages.</description>
+      <guid>https://hyderabad-service-marketplace.com/deals/1</guid>
+      <pubDate>Thu, 09 Jul 2026 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
