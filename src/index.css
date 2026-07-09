@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-nav {
+  background: #F2F3F2 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 18px -4px rgba(15, 23, 42, 0.04) !important;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-dropdown {
+  background: #F2F3F2 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Premium Glow Effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+/* Animations & Micro-interactions */
+@keyframes pulse-gentle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.95; }
+}
+
+.pulse-gentle {
+  animation: pulse-gentle 4s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.float-hover:hover {
+  animation: float 2s infinite ease-in-out;
+}
+
+/* Soft gradients */
+.gradient-text {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Premium smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

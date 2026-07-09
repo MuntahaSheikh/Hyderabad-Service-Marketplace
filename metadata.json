@@ -1,0 +1,12 @@
+{
+  "name": "Hyderabad Service Marketplace",
+  "description": "A premium, hyperlocal service marketplace for Hyderabad, Sindh, featuring booking workflows, customer-provider chats, multi-role dashboards, and advanced AI-powered service matching, chat assistance, and price estimation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
