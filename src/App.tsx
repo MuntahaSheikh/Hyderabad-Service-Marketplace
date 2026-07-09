@@ -612,7 +612,7 @@ export default function App() {
               />
 
               {/* Browse Categories */}
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <div id="explore-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="border-b border-slate-100 dark:border-slate-800/80 pb-4 mb-8 flex justify-between items-end">
                   <div>
                     <h3 className="font-display font-black text-xl md:text-2xl text-slate-900 dark:text-white">

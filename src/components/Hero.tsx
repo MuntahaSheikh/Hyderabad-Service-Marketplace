@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Mic, Zap, ShieldCheck, MapPin, X, Flame } from "lucide-react";
+import { Search, Mic, Zap, ShieldCheck, MapPin, X, Flame, Loader2 } from "lucide-react";
 
 interface HeroProps {
   selectedLocation: string;
@@ -15,12 +15,13 @@ export default function Hero({ selectedLocation, onSearchSubmit, onTriggerSos }:
   const [sosService, setSosService] = useState("");
   const [sosPhone, setSosPhone] = useState("0301-1112222");
   const [sosDetails, setSosDetails] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleVoiceSearch = () => {
     setIsListening(true);
-    setVoiceText("Listening...");
+    setVoiceText("Listening for your voice in Hyderabad...");
     
-    // Simulate real voice matching
     const voiceScenarios = [
       "Need a plumber in Latifabad Unit 6",
       "Best home tutor for mathematics",
@@ -32,24 +33,52 @@ export default function Hero({ selectedLocation, onSearchSubmit, onTriggerSos }:
     const randomVoice = voiceScenarios[Math.floor(Math.random() * voiceScenarios.length)];
 
     setTimeout(() => {
-      setVoiceText(`"${randomVoice}"`);
-    }, 2000);
+      setVoiceText(`Matched: "${randomVoice}"`);
+    }, 1500);
 
     setTimeout(() => {
       setIsListening(false);
       setSearchQuery(randomVoice);
-      onSearchSubmit(randomVoice);
-    }, 3500);
+      setIsSearching(true);
+      
+      setTimeout(() => {
+        onSearchSubmit(randomVoice);
+        setIsSearching(false);
+        const element = document.getElementById("explore-section");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 500);
+    }, 2800);
   };
 
-  const handleQuickTagClick = (tag: string) => {
+  const handleQuickTagClick = async (tag: string) => {
     setSearchQuery(tag);
+    setIsSearching(true);
+    await new Promise((resolve) => setTimeout(resolve, 400));
     onSearchSubmit(tag);
+    setIsSearching(false);
+    
+    const element = document.getElementById("explore-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSearching(true);
+    
+    // Smooth professional loading experience
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    
     onSearchSubmit(searchQuery);
+    setIsSearching(false);
+    
+    const element = document.getElementById("explore-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
@@ -78,18 +107,32 @@ export default function Hero({ selectedLocation, onSearchSubmit, onTriggerSos }:
 
         {/* Search Engine Form */}
         <div className="mt-8 max-w-2xl mx-auto">
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-800 relative">
+          <form 
+            onSubmit={handleSubmit} 
+            className={`flex flex-col sm:flex-row gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl border relative transition-all duration-300 ${
+              isFocused 
+                ? "border-blue-500 ring-4 ring-blue-500/10 shadow-blue-500/5" 
+                : "border-slate-200/60 dark:border-slate-800"
+            }`}
+          >
             <div className="flex-1 flex items-center gap-2 px-3">
-              <Search className="w-5 h-5 text-slate-400" />
+              <Search className={`w-5 h-5 transition-colors ${isFocused ? "text-blue-500" : "text-slate-400"}`} />
               <input
                 type="text"
                 value={searchQuery}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="What service do you need? (e.g. Plumber, Tutor, Mehndi artist...)"
-                className="w-full text-sm bg-transparent border-none text-slate-800 dark:text-white focus:outline-none placeholder-slate-400"
+                className="w-full text-sm bg-transparent border-none text-slate-800 dark:text-white focus:outline-none placeholder-slate-400 py-1"
+                disabled={isSearching}
               />
               {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                <button 
+                  type="button" 
+                  onClick={() => { setSearchQuery(""); onSearchSubmit(""); }} 
+                  className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                >
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -99,8 +142,9 @@ export default function Hero({ selectedLocation, onSearchSubmit, onTriggerSos }:
               {/* Voice button */}
               <button
                 type="button"
+                disabled={isSearching}
                 onClick={handleVoiceSearch}
-                className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
+                className={`p-2.5 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 ${
                   isListening
                     ? "bg-red-500 text-white animate-bounce"
                     : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -112,9 +156,17 @@ export default function Hero({ selectedLocation, onSearchSubmit, onTriggerSos }:
 
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs tracking-wide transition-colors"
+                disabled={isSearching}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 min-w-[120px] shadow-sm active:scale-95 cursor-pointer"
               >
-                Find Services
+                {isSearching ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <span>Find Services</span>
+                )}
               </button>
             </div>
           </form>
