@@ -266,6 +266,7 @@ app.get("/browserconfig.xml", serveSeoFile("browserconfig.xml", "application/xml
 app.get("/rss.xml", serveSeoFile("rss.xml", "application/xml"));
 app.get("/googleYK-pl5Dys6dA2YfxgNDDovzQoEbic5lvK87wTcap9NY.html", serveSeoFile("googleYK-pl5Dys6dA2YfxgNDDovzQoEbic5lvK87wTcap9NY.html", "text/html"));
 app.get("/google4K712HYFEj8dG3NLwRSdwBkpbnUkUnGpngNemboHIj8.html", serveSeoFile("google4K712HYFEj8dG3NLwRSdwBkpbnUkUnGpngNemboHIj8.html", "text/html"));
+app.get("/googled5886e79a601f5b8.html", serveSeoFile("googled5886e79a601f5b8.html", "text/html"));
 
 // Serve Frontend App
 async function startServer() {
