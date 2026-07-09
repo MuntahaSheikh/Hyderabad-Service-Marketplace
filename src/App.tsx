@@ -33,6 +33,7 @@ import DashboardProvider from "./components/DashboardProvider";
 import DashboardAdmin from "./components/DashboardAdmin";
 import AiAssistant from "./components/AiAssistant";
 import { generateSeoMetadata, updateDocumentSeo } from "./lib/seo";
+import ProviderFilters, { FilterState, DEFAULT_FILTERS } from "./components/ProviderFilters";
 import { 
   showSuccess, 
   showError, 
@@ -91,6 +92,14 @@ export default function App() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [advancedFilters, setAdvancedFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 3;
+
+  // Reset page when filter inputs change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [advancedFilters, searchQuery, selectedCategory, selectedLocation]);
 
   // Saved / Faved providers (simulation)
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -473,27 +482,139 @@ export default function App() {
   // SEARCH / FILTERING UTILS
   // ==========================================
 
-  const filteredProviders = providers.filter((p) => {
-    // 1. Location Filter
-    if (selectedLocation !== "All Hyderabad" && p.location !== selectedLocation) {
-      return false;
-    }
-    // 2. Category Filter
-    if (selectedCategory !== "All" && p.category !== selectedCategory) {
-      return false;
-    }
-    // 3. Search Query
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q) ||
-        p.tagline?.toLowerCase().includes(q) ||
-        p.skills?.some(s => s.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (advancedFilters.subcategory !== "All") count++;
+    if (advancedFilters.area !== "All Hyderabad" && advancedFilters.area !== "") count++;
+    if (advancedFilters.minPrice !== "") count++;
+    if (advancedFilters.maxPrice !== "") count++;
+    if (advancedFilters.minRating !== 0) count++;
+    if (advancedFilters.availability !== "All") count++;
+    if (advancedFilters.eventDate !== "") count++;
+    if (advancedFilters.minExperience !== "") count++;
+    if (advancedFilters.trustScoreThreshold !== "") count++;
+    if (advancedFilters.verifiedOnly) count++;
+    if (advancedFilters.minCapacity !== "") count++;
+    return count;
+  }, [advancedFilters]);
+
+  const filteredProviders = useMemo(() => {
+    return providers.filter((p) => {
+      // 1. Location / Area Filter
+      const activeArea = (advancedFilters.area && advancedFilters.area !== "All Hyderabad") ? advancedFilters.area : selectedLocation;
+      if (activeArea !== "All Hyderabad" && p.location !== activeArea) {
+        return false;
+      }
+
+      // 2. Category Filter
+      if (selectedCategory !== "All" && p.category !== selectedCategory) {
+        return false;
+      }
+
+      // 3. Subcategory Filter
+      if (advancedFilters.subcategory !== "All") {
+        if (!p.subcategories || !p.subcategories.includes(advancedFilters.subcategory)) {
+          return false;
+        }
+      }
+
+      // 4. Price range Filter
+      if (advancedFilters.minPrice !== "" && p.baseRate !== undefined && p.baseRate < advancedFilters.minPrice) {
+        return false;
+      }
+      if (advancedFilters.maxPrice !== "" && p.baseRate !== undefined && p.baseRate > advancedFilters.maxPrice) {
+        return false;
+      }
+
+      // 5. Rating Filter
+      if (advancedFilters.minRating > 0 && (p.rating === undefined || p.rating < advancedFilters.minRating)) {
+        return false;
+      }
+
+      // 6. Availability Filter
+      if (advancedFilters.availability !== "All" && p.availability !== advancedFilters.availability) {
+        return false;
+      }
+
+      // 7. Event Date Availability (Dynamic check against bookings)
+      if (advancedFilters.eventDate) {
+        const isBooked = bookings.some(b => 
+          b.providerId === p.uid && 
+          (b.status === "accepted" || b.status === "in_progress" || b.status === "pending") &&
+          b.dateTime && b.dateTime.startsWith(advancedFilters.eventDate)
+        );
+        if (isBooked) {
+          return false;
+        }
+      }
+
+      // 8. Experience Years
+      if (advancedFilters.minExperience !== "" && (p.experienceYears === undefined || p.experienceYears < advancedFilters.minExperience)) {
+        return false;
+      }
+
+      // 9. Trust Score
+      if (advancedFilters.trustScoreThreshold !== "" && (p.trustScore === undefined || p.trustScore < advancedFilters.trustScoreThreshold)) {
+        return false;
+      }
+
+      // 10. Verified Only
+      if (advancedFilters.verifiedOnly && !p.isVerified) {
+        return false;
+      }
+
+      // 11. Capacity Filter
+      if (advancedFilters.minCapacity !== "" && (p.capacity === undefined || p.capacity < advancedFilters.minCapacity)) {
+        return false;
+      }
+
+      // 12. Search Query
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesCategory = p.category?.toLowerCase().includes(q);
+        const matchesTagline = p.tagline?.toLowerCase().includes(q);
+        const matchesBio = p.bio?.toLowerCase().includes(q);
+        const matchesSkills = p.skills?.some(s => s.toLowerCase().includes(q));
+        const matchesSubcats = p.subcategories?.some(s => s.toLowerCase().includes(q));
+        if (!matchesName && !matchesCategory && !matchesTagline && !matchesBio && !matchesSkills && !matchesSubcats) {
+          return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => {
+      // Sorting
+      switch (advancedFilters.sortBy) {
+        case "price_asc":
+          return (a.baseRate || 0) - (b.baseRate || 0);
+        case "price_desc":
+          return (b.baseRate || 0) - (a.baseRate || 0);
+        case "rating_desc":
+          return (b.rating || 0) - (a.rating || 0);
+        case "experience_desc":
+          return (b.experienceYears || 0) - (a.experienceYears || 0);
+        case "trust_desc":
+          return (b.trustScore || 0) - (a.trustScore || 0);
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "best":
+        default:
+          const scoreA = (a.trustScore || 0) * 0.6 + (a.rating || 0) * 10 * 0.4;
+          const scoreB = (b.trustScore || 0) * 0.6 + (b.rating || 0) * 10 * 0.4;
+          return scoreB - scoreA;
+      }
+    });
+  }, [providers, bookings, selectedLocation, selectedCategory, searchQuery, advancedFilters]);
+
+  const paginatedProviders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProviders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProviders, currentPage, itemsPerPage]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredProviders.length / itemsPerPage);
+  }, [filteredProviders, itemsPerPage]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
@@ -665,6 +786,20 @@ export default function App() {
                   ))}
                 </div>
 
+                {/* Advanced Filtering Control Panel */}
+                <div className="mb-10">
+                  <ProviderFilters
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    selectedLocation={selectedLocation}
+                    setSelectedLocation={setSelectedLocation}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    onFiltersChange={setAdvancedFilters}
+                    activeFiltersCount={activeFiltersCount}
+                  />
+                </div>
+
                 {/* Provider Grid section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {/* Providers directory lists */}
@@ -673,9 +808,9 @@ export default function App() {
                       <h4 className="font-display font-bold text-sm text-slate-400 uppercase tracking-widest">
                         Verified Providers ({filteredProviders.length})
                       </h4>
-                      {selectedLocation !== "All Hyderabad" && (
+                      {(selectedLocation !== "All Hyderabad" || advancedFilters.area !== "All Hyderabad") && (
                         <span className="text-[11px] text-blue-500 font-semibold bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg">
-                          Filtering for {selectedLocation}
+                          Filtering for {advancedFilters.area !== "All Hyderabad" ? advancedFilters.area : selectedLocation}
                         </span>
                       )}
                     </div>
@@ -688,7 +823,7 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="space-y-5">
-                        {filteredProviders.map((prov) => {
+                        {paginatedProviders.map((prov) => {
                           const isSaved = favorites.includes(prov.uid);
 
                           return (
@@ -771,6 +906,44 @@ export default function App() {
                             </div>
                           );
                         })}
+
+                        {/* Beautiful Pagination UI */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between pt-4 border-t border-slate-200/50 dark:border-slate-800">
+                            <span className="text-xs text-slate-500 font-medium">
+                              Showing <strong className="text-slate-800 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</strong> to <strong className="text-slate-800 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProviders.length)}</strong> of <strong className="text-slate-800 dark:text-white">{filteredProviders.length}</strong> providers
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                className="px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-slate-700 dark:text-slate-200"
+                              >
+                                Previous
+                              </button>
+                              {Array.from({ length: totalPages }).map((_, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => setCurrentPage(i + 1)}
+                                  className={`w-8 h-8 rounded-xl text-xs font-bold flex items-center justify-center transition-all ${
+                                    currentPage === i + 1
+                                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/10 border-blue-600"
+                                      : "border border-slate-200/60 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900"
+                                  }`}
+                                >
+                                  {i + 1}
+                                </button>
+                              ))}
+                              <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                className="px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs font-bold disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-slate-700 dark:text-slate-200"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

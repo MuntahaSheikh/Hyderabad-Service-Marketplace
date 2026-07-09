@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ReverseAuction, Bid, UserProfile } from "../types";
+import { INITIAL_CATEGORIES, HYDERABAD_AREAS } from "../lib/seedData";
 import { 
   Zap, 
   MapPin, 
@@ -13,7 +14,9 @@ import {
   Plus,
   X,
   Upload,
-  Trash2
+  Trash2,
+  Filter,
+  Search
 } from "lucide-react";
 import { showSuccess, showError } from "../lib/notifications";
 
@@ -55,6 +58,44 @@ export default function ReverseAuctionBoard({
   const [biddingAuctionId, setBiddingAuctionId] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState(1000);
   const [bidProposal, setBidProposal] = useState("");
+
+  // Filter States for Board
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [filterLocation, setFilterLocation] = useState("All");
+  const [filterSearch, setFilterSearch] = useState("");
+  const [filterMinBudget, setFilterMinBudget] = useState<number | "">("");
+  const [filterMaxBudget, setFilterMaxBudget] = useState<number | "">("");
+
+  const filteredAuctions = useMemo(() => {
+    return auctions.filter((auc) => {
+      // 1. Category Filter
+      if (filterCategory !== "All" && auc.category !== filterCategory) {
+        return false;
+      }
+      // 2. Location / Area Filter
+      if (filterLocation !== "All" && filterLocation !== "All Hyderabad" && auc.location !== filterLocation) {
+        return false;
+      }
+      // 3. Search query
+      if (filterSearch.trim()) {
+        const q = filterSearch.toLowerCase();
+        const matchesTitle = auc.title.toLowerCase().includes(q);
+        const matchesDesc = auc.description.toLowerCase().includes(q);
+        const matchesCust = auc.customerName.toLowerCase().includes(q);
+        if (!matchesTitle && !matchesDesc && !matchesCust) {
+          return false;
+        }
+      }
+      // 4. Budget Filters
+      if (filterMinBudget !== "" && auc.maxBudget < filterMinBudget) {
+        return false;
+      }
+      if (filterMaxBudget !== "" && auc.maxBudget > filterMaxBudget) {
+        return false;
+      }
+      return true;
+    });
+  }, [auctions, filterCategory, filterLocation, filterSearch, filterMinBudget, filterMaxBudget]);
 
   const validateForm = () => {
     const tempErrors: Record<string, string> = {};
@@ -217,28 +258,121 @@ export default function ReverseAuctionBoard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Active Board */}
         <div className="lg:col-span-2 space-y-5">
+          {/* Filters for Bidding Board */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/85 pb-2">
+              <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-blue-500" />
+                Refine Auction Board
+              </span>
+              {(filterCategory !== "All" || filterLocation !== "All" || filterSearch !== "" || filterMinBudget !== "" || filterMaxBudget !== "") && (
+                <button
+                  onClick={() => {
+                    setFilterCategory("All");
+                    setFilterLocation("All");
+                    setFilterSearch("");
+                    setFilterMinBudget("");
+                    setFilterMaxBudget("");
+                  }}
+                  className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"
+                >
+                  Clear Board Filters
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search requirements..."
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
+                  className="w-full pl-7.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-800 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              {/* Category selector */}
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-800 dark:text-white focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="All">All Categories</option>
+                {INITIAL_CATEGORIES.map(c => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+
+              {/* Location selector */}
+              <select
+                value={filterLocation}
+                onChange={(e) => setFilterLocation(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-800 dark:text-white focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="All">All Hyderabad Areas</option>
+                {HYDERABAD_AREAS.filter(a => a !== "All Hyderabad").map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Budget constraints */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="relative">
+                <DollarSign className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="number"
+                  placeholder="Min Budget"
+                  value={filterMinBudget}
+                  onChange={(e) => setFilterMinBudget(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="w-full pl-7.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-800 dark:text-white focus:outline-none"
+                />
+              </div>
+              <div className="relative">
+                <DollarSign className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="number"
+                  placeholder="Max Budget"
+                  value={filterMaxBudget}
+                  onChange={(e) => setFilterMaxBudget(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="w-full pl-7.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-800 dark:text-white focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <h3 className="font-display font-bold text-sm text-slate-400 uppercase tracking-widest">
-              Live Bidding Board ({auctions.length})
+              Live Bidding Board ({filteredAuctions.length})
             </h3>
             <span className="text-[10px] text-emerald-500 font-bold animate-pulse flex items-center gap-1">
               ● Live Connections
             </span>
           </div>
 
-          {auctions.length === 0 ? (
+          {filteredAuctions.length === 0 ? (
             <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
               <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">No active auctions at the moment.</p>
-              {currentUserProfile.role === "customer" && (
-                <button onClick={() => setShowCreateModal(true)} className="text-xs text-blue-500 underline mt-1 font-semibold">
-                  Create the first post!
-                </button>
-              )}
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">No active auctions match your filters.</p>
+              <button
+                onClick={() => {
+                  setFilterCategory("All");
+                  setFilterLocation("All");
+                  setFilterSearch("");
+                  setFilterMinBudget("");
+                  setFilterMaxBudget("");
+                }}
+                className="text-xs text-blue-500 underline mt-1 font-semibold"
+              >
+                Clear all filters
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {auctions.map((auc) => {
+              {filteredAuctions.map((auc) => {
                 const isMyAuction = auc.customerId === currentUserId;
                 const alreadyBid = auc.bids?.some(b => b.providerId === currentUserId);
 
